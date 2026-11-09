@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Auto Token Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        discord: {
+                            dark: '#1e1f22',
+                            darker: '#111214',
+                            sidebar: '#2b2d31',
+                            card: '#2b2d31',
+                            accent: '#5865f2',
+                            accentHover: '#4752c4',
+                            green: '#23a55a',
+                            yellow: '#f0b232',
+                            red: '#f23f43'
+                        },
+                        cyber: {
+                            neon: '#00ffcc',
+                            purple: '#9d4edd',
+                            pink: '#ff007f'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111214;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2b2d31;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5865f2;
+        }
+        .glow-neon {
+            box-shadow: 0 0 15px rgba(88, 101, 242, 0.4);
+        }
+        .glow-green {
+            box-shadow: 0 0 12px rgba(35, 165, 90, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-discord-darker text-gray-200 font-sans min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="bg-discord-sidebar border-b border-gray-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-discord-accent flex items-center justify-center shadow-lg text-white font-bold text-xl glow-neon">
+                    <i class="fa-brands fa-discord"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white tracking-wide flex items-center gap-2">
+                        DISCORD AUTO DASHBOARD
+                        <span class="text-xs bg-discord-accent/20 text-discord-accent px-2 py-0.5 rounded-full border border-discord-accent/40 font-mono">v2.5 PRO</span>
+                    </h1>
+                    <p class="text-xs text-gray-400">Trình quản lý & Treo Token / Bot Discord Tự Động</p>
+                </div>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="flex items-center space-x-3">
+                <button onclick="exportConfig()" class="bg-discord-dark hover:bg-gray-700 text-xs text-gray-300 font-medium px-3 py-2 rounded-lg border border-gray-700 flex items-center space-x-1 transition">
+                    <i class="fa-solid fa-download text-discord-accent"></i>
+                    <span class="hidden sm:inline">Export Config</span>
+                </button>
+                <label class="bg-discord-dark hover:bg-gray-700 text-xs text-gray-300 font-medium px-3 py-2 rounded-lg border border-gray-700 flex items-center space-x-1 cursor-pointer transition">
+                    <i class="fa-solid fa-upload text-cyber-neon"></i>
+                    <span class="hidden sm:inline">Import Config</span>
+                    <input type="file" id="importFileInput" onchange="importConfig(event)" class="hidden" accept=".json">
+                </label>
+                <div class="h-6 w-px bg-gray-700 mx-1"></div>
+                <div class="flex items-center space-x-2">
+                    <span class="relative flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-xs text-emerald-400 font-mono hidden md:inline" id="systemStatus">System Ready</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full grow grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Add Task / Control Panel (5 Cols) -->
+        <section class="lg:col-span-5 space-y-6">
+            <div class="bg-discord-card rounded-xl p-5 border border-gray-800 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-discord-accent/5 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <h2 class="text-md font-semibold text-white mb-4 flex items-center justify-between border-b border-gray-700/60 pb-3">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-discord-accent"></i> Thêm Token & Cấu Hình
+                    </span>
+                    <span class="text-xs text-gray-400 font-normal">Mô phỏng WebSocket/HTTP</span>
+                </h2>
+
+                <form id="addTokenForm" onsubmit="handleAddToken(event)" class="space-y-4">
+                    <!-- Token Input -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">
+                            Discord User Token <span class="text-red-400">*</span>
+                        </label>
+                        <div class="relative">
+                            <input type="password" id="tokenInput" required placeholder="NTE5MjM4..." 
+                                class="w-full bg-discord-dark border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-discord-accent transition font-mono pr-10">
+                            <button type="button" onclick="toggleTokenVisibility('tokenInput')" class="absolute right-3 top-2.5 text-gray-400 hover:text-white text-xs">
+                                <i class="fa-solid fa-eye" id="tokenInputIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Channel ID Input -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">
+                            Channel ID (Kênh gửi tin) <span class="text-red-400">*</span>
+                        </label>
+                        <input type="text" id="channelIdInput" required placeholder="10482948294829..." 
+                            class="w-full bg-discord-dark border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-discord-accent transition font-mono">
+                    </div>
+
+                    <!-- Message Content Input -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">
+                            Nội Dung Tin Nhắn
+                        </label>
+                        <textarea id="messageInput" rows="2" placeholder="Nhập nội dung cần treo tự động gửi..." 
+                            class="w-full bg-discord-dark border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-discord-accent transition resize-none"></textarea>
+                    </div>
+
+                    <!-- Delay Seconds -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-medium text-gray-300">Khoảng thời gian gửi (Delay)</label>
+                            <span class="text-xs font-mono text-discord-accent" id="delayValueText">10 Giây</span>
+                        </div>
+                        <input type="range" id="delayInput" min="3" max="300" value="10" oninput="document.getElementById('delayValueText').innerText = this.value + ' Giây'"
+                            class="w-full accent-discord-accent bg-discord-dark rounded-lg h-2 cursor-pointer">
+                    </div>
+
+                    <!-- Options Checkboxes -->
+                    <div class="space-y-2 pt-2 border-t border-gray-700/60">
+                        <span class="block text-xs font-medium text-gray-400 mb-1">Tùy Chọn Chế Độ Treo:</span>
+                        
+                        <label class="flex items-center justify-between p-2 rounded-lg bg-discord-dark/50 hover:bg-discord-dark cursor-pointer transition">
+                            <span class="text-xs text-gray-300 flex items-center gap-2">
+                                <i class="fa-solid fa-paper-plane text-emerald-400"></i> Auto Send Message (Gửi tin định kỳ)
+                            </span>
+                            <input type="checkbox" id="optAutoSend" checked class="w-4 h-4 rounded accent-discord-accent">
+                        </label>
+
+                        <label class="flex items-center justify-between p-2 rounded-lg bg-discord-dark/50 hover:bg-discord-dark cursor-pointer transition">
+                            <span class="text-xs text-gray-300 flex items-center gap-2">
+                                <i class="fa-solid fa-wifi text-cyber-neon"></i> Auto Online Presence (Giữ Trạng Thái Online)
+                            </span>
+                            <input type="checkbox" id="optAutoOnline" checked class="w-4 h-4 rounded accent-discord-accent">
+                        </label>
+
+                        <label class="flex items-center justify-between p-2 rounded-lg bg-discord-dark/50 hover:bg-discord-dark cursor-pointer transition">
+                            <span class="text-xs text-gray-300 flex items-center gap-2">
+                                <i class="fa-solid fa-face-smile text-amber-400"></i> Auto React Emoji (Tự động tương tác)
+                            </span>
+                            <input type="checkbox" id="optAutoReact" class="w-4 h-4 rounded accent-discord-accent">
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="w-full bg-discord-accent hover:bg-discord-accentHover text-white font-medium py-2.5 rounded-lg shadow-lg transition duration-200 flex items-center justify-center space-x-2 text-sm glow-neon">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Thêm & Khởi Chạy Task</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Quick Stats Summary -->
+            <div class="grid grid-cols-3 gap-3">
+                <div class="bg-discord-card border border-gray-800 p-3 rounded-xl text-center">
+                    <p class="text-xs text-gray-400">Tổng Token</p>
+                    <p class="text-xl font-bold text-white font-mono mt-1" id="statTotalTokens">0</p>
+                </div>
+                <div class="bg-discord-card border border-gray-800 p-3 rounded-xl text-center">
+                    <p class="text-xs text-gray-400">Đang Treo</p>
+                    <p class="text-xl font-bold text-emerald-400 font-mono mt-1" id="statActiveTokens">0</p>
+                </div>
+                <div class="bg-discord-card border border-gray-800 p-3 rounded-xl text-center">
+                    <p class="text-xs text-gray-400">Tin Đã Gửi</p>
+                    <p class="text-xl font-bold text-cyber-neon font-mono mt-1" id="statTotalSent">0</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Token Management & Logs (7 Cols) -->
+        <section class="lg:col-span-7 space-y-6 flex flex-col">
+            
+            <!-- Active Tokens Table -->
+            <div class="bg-discord-card rounded-xl border border-gray-800 shadow-xl overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-gray-700/60 flex items-center justify-between">
+                    <h2 class="text-md font-semibold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-cyber-neon"></i> Danh Sách Token Đang Treo
+                    </h2>
+                    <div class="space-x-2">
+                        <button onclick="startAllTokens()" class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded hover:bg-emerald-500/30 transition">
+                            <i class="fa-solid fa-play mr-1"></i> Bật Tất Cả
+                        </button>
+                        <button onclick="stopAllTokens()" class="text-xs bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-1 rounded hover:bg-red-500/30 transition">
+                            <i class="fa-solid fa-stop mr-1"></i> Dừng Tất Cả
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto min-h-[220px]">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-discord-dark text-gray-400 uppercase font-mono border-b border-gray-800">
+                            <tr>
+                                <th class="p-3">Token Info</th>
+                                <th class="p-3">Trạng Thái</th>
+                                <th class="p-3 text-center">Đã Gửi</th>
+                                <th class="p-3">Uptime</th>
+                                <th class="p-3 text-right">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tokenTableBody" class="divide-y divide-gray-800">
+                            <!-- Rows dynamic load here -->
+                        </tbody>
+                    </table>
+                    <div id="emptyState" class="p-8 text-center text-gray-500">
+                        <i class="fa-solid fa-robot text-3xl mb-2 block opacity-40"></i>
+                        <p class="text-xs">Chưa có Token nào được thêm vào hệ thống.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Terminal Console Log -->
+            <div class="bg-discord-darker rounded-xl border border-gray-800 shadow-2xl flex-1 flex flex-col min-h-[300px]">
+                <div class="bg-discord-sidebar px-4 py-2.5 border-b border-gray-800 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="text-xs font-mono text-gray-400 ml-2">Console Real-time Terminal</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="clearLogs()" class="text-xs text-gray-400 hover:text-white px-2 py-0.5 rounded bg-discord-dark transition">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Clear
+                        </button>
+                    </div>
+                </div>
+                <div id="terminalLog" class="p-4 font-mono text-xs overflow-y-auto space-y-1.5 h-64 flex-1">
+                    <div class="text-gray-500">[System] Trình mô phỏng Discord Auto Dashboard đã sẵn sàng...</div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-discord-sidebar border-t border-gray-800 py-3 mt-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-gray-500 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>© 2026 Discord Auto Manager Dashboard. Giả lập dành cho thử nghiệm & Demo UI.</span>
+            <div class="flex space-x-4">
+                <span class="hover:text-gray-300 cursor-pointer">Chính sách</span>
+                <span class="hover:text-gray-300 cursor-pointer">Hướng dẫn Token</span>
+                <span class="hover:text-gray-300 cursor-pointer">API Status</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+    <script>
+        // Global App State
+        let tokenList = [];
+        let globalSentCount = 0;
+
+        // Load persisted tokens on initial start
+        window.onload = function() {
+            const savedTokens = localStorage.getItem('discord_auto_tokens');
+            if (savedTokens) {
+                try {
+                    const parsed = JSON.parse(savedTokens);
+                    tokenList = parsed.map(t => ({
+                        ...t,
+                        status: 'Stopped', // Reset status on reload
+                        sentCount: t.sentCount || 0,
+                        startTime: null,
+                        intervalId: null
+                    }));
+                    renderTable();
+                    updateStats();
+                    addLog('INFO', 'Đã tải lại ' + tokenList.length + ' cấu hình từ bộ nhớ cục bộ.');
+                } catch(e) {
+                    console.error(e);
+                }
+            }
+        };
+
+        // Custom Notification Toast
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center space-x-2 px-4 py-3 rounded-lg shadow-xl text-xs text-white border transition duration-300 transform translate-y-2 ${
+                type === 'success' ? 'bg-emerald-900/90 border-emerald-500' :
+                type === 'error' ? 'bg-red-900/90 border-red-500' : 'bg-discord-sidebar border-discord-accent'
+            }`;
+            
+            const icon = type === 'success' ? 'fa-circle-check text-emerald-400' :
+                         type === 'error' ? 'fa-circle-xmark text-red-400' : 'fa-circle-info text-discord-accent';
+            
+            toast.innerHTML = `<i class="fa-solid ${icon} text-sm"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Toggle Token Visibility
+        function toggleTokenVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(inputId + 'Icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        // Real-Time Log System
+        function addLog(level, message, tokenId = null) {
+            const logContainer = document.getElementById('terminalLog');
+            const timeStr = new Date().toLocaleTimeString('vi-VN');
+            const logRow = document.createElement('div');
+            logRow.className = 'flex items-start space-x-2 leading-relaxed';
+
+            let levelBadge = '';
+            switch(level) {
+                case 'SUCCESS':
+                    levelBadge = '<span class="text-emerald-400 font-bold">[SUCCESS]</span>';
+                    break;
+                case 'ERROR':
+                    levelBadge = '<span class="text-red-400 font-bold">[ERROR]</span>';
+                    break;
+                case 'WARN':
+                    levelBadge = '<span class="text-yellow-400 font-bold">[WARN]</span>';
+                    break;
+                case 'INFO':
+                default:
+                    levelBadge = '<span class="text-cyan-400 font-bold">[INFO]</span>';
+                    break;
+            }
+
+            const tokenTag = tokenId ? `<span class="text-purple-400">[ID:${tokenId.substring(0, 6)}...]</span>` : '';
+
+            logRow.innerHTML = `
+                <span class="text-gray-500 shrink-0">[${timeStr}]</span>
+                ${levelBadge}
+                ${tokenTag}
+                <span class="text-gray-200 flex-1 break-all">${escapeHtml(message)}</span>
+            `;
+
+            logContainer.appendChild(logRow);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('terminalLog').innerHTML = '<div class="text-gray-500">[System] Đã xóa toàn bộ nhật ký console.</div>';
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // Handle Add New Token Task
+        function handleAddToken(e) {
+            e.preventDefault();
+
+            const token = document.getElementById('tokenInput').value.trim();
+            const channelId = document.getElementById('channelIdInput').value.trim();
+            const message = document.getElementById('messageInput').value.trim();
+            const delay = parseInt(document.getElementById('delayInput').value);
+            
+            const optAutoSend = document.getElementById('optAutoSend').checked;
+            const optAutoOnline = document.getElementById('optAutoOnline').checked;
+            const optAutoReact = document.getElementById('optAutoReact').checked;
+
+            if (!token || !channelId) {
+                showToast('Vui lòng điền đầy đủ Token và Channel ID!', 'error');
+                return;
+            }
+
+            const id = 'TK_' + Math.random().toString(36).substr(2, 7);
+
+            const newTokenTask = {
+                id: id,
+                token: token,
+                channelId: channelId,
+                message: message || 'Discord Auto Ping Stay Alive!',
+                delay: delay,
+                options: {
+                    autoSend: optAutoSend,
+                    autoOnline: optAutoOnline,
+                    autoReact: optAutoReact
+                },
+                status: 'Running',
+                sentCount: 0,
+                startTime: Date.now(),
+                intervalId: null
+            };
+
+            tokenList.push(newTokenTask);
+            saveToLocalStorage();
+            renderTable();
+            updateStats();
+
+            showToast('Đã thêm Token và khởi chạy mô phỏng!', 'success');
+            addLog('INFO', `Đã thêm Token mới thành công. ID: ${id}`, id);
+
+            // Start Execution for this token
+            startTaskExecution(newTokenTask);
+
+            // Clear Input Form partially
+            document.getElementById('tokenInput').value = '';
+        }
+
+        // Save state to Local Storage
+        function saveToLocalStorage() {
+            const dataToSave = tokenList.map(t => ({
+                id: t.id,
+                token: t.token,
+                channelId: t.channelId,
+                message: t.message,
+                delay: t.delay,
+                options: t.options,
+                sentCount: t.sentCount
+            }));
+            localStorage.setItem('discord_auto_tokens', JSON.stringify(dataToSave));
+        }
+
+        // Task Execution Logic (Simulated Bot/User Activity)
+        function startTaskExecution(task) {
+            if (task.intervalId) clearInterval(task.intervalId);
+
+            task.status = 'Running';
+            task.startTime = Date.now();
+            renderTable();
+            updateStats();
+
+            addLog('INFO', `WebSocket Handshake successful. Heartbeat ACK received (GATEWAY 443).`, task.id);
+            if (task.options.autoOnline) {
+                addLog('SUCCESS', `Presence updated: Status ONLINE [CUSTOM_STATUS]`, task.id);
+            }
+
+            // Execute first loop immediately or on interval
+            const runLoop = () => {
+                if (task.status !== 'Running') return;
+
+                if (task.options.autoSend && task.message) {
+                    // Simulate POST request to Discord API
+                    const isSuccess = Math.random() > 0.05; // 95% success rate simulation
+
+                    if (isSuccess) {
+                        task.sentCount++;
+                        globalSentCount++;
+                        updateStats();
+                        renderTableUptimeAndCounts();
+                        addLog('SUCCESS', `HTTP 200 OK -> Message sent to Channel <#${task.channelId}>: "${task.message}"`, task.id);
+
+                        if (task.options.autoReact) {
+                            setTimeout(() => {
+                                addLog('INFO', `Auto Reacted ✅ to message in Channel <#${task.channelId}>`, task.id);
+                            }, 1200);
+                        }
+                    } else {
+                        addLog('ERROR', `HTTP 429 Too Many Requests / Rate Limited. Retrying after delay...`, task.id);
+                    }
+                }
+            };
+
+            // Trigger once
+            runLoop();
+
+            // Set Interval
+            task.intervalId = setInterval(runLoop, task.delay * 1000);
+        }
+
+        function stopTaskExecution(task) {
+            if (task.intervalId) {
+                clearInterval(task.intervalId);
+                task.intervalId = null;
+            }
+            task.status = 'Stopped';
+            addLog('WARN', `Đã tạm dừng task treo token.`, task.id);
+            renderTable();
+            updateStats();
+        }
+
+        function toggleTask(id) {
+            const task = tokenList.find(t => t.id === id);
+            if (!task) return;
+
+            if (task.status === 'Running') {
+                stopTaskExecution(task);
+            } else {
+                startTaskExecution(task);
+            }
+        }
+
+        function deleteTask(id) {
+            const task = tokenList.find(t => t.id === id);
+            if (task) {
+                stopTaskExecution(task);
+                tokenList = tokenList.filter(t => t.id !== id);
+                saveToLocalStorage();
+                renderTable();
+                updateStats();
+                addLog('WARN', `Đã xóa Token ID: ${id} khỏi hệ thống.`);
+                showToast('Đã xóa Token!', 'info');
+            }
+        }
+
+        function startAllTokens() {
+            tokenList.forEach(t => {
+                if (t.status !== 'Running') startTaskExecution(t);
+            });
+            showToast('Đã khởi chạy tất cả Token!', 'success');
+        }
+
+        function stopAllTokens() {
+            tokenList.forEach(t => {
+                if (t.status === 'Running') stopTaskExecution(t);
+            });
+            showToast('Đã dừng tất cả Token!', 'info');
+        }
+
+        // Render Token Table UI
+        function renderTable() {
+            const tbody = document.getElementById('tokenTableBody');
+            const emptyState = document.getElementById('emptyState');
+
+            if (tokenList.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = tokenList.map(t => {
+                const maskedToken = t.token.substring(0, 8) + '...' + t.token.substring(t.token.length - 4);
+                const statusBadge = t.status === 'Running' 
+                    ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center w-fit gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> RUNNING</span>`
+                    : `<span class="bg-gray-700/50 text-gray-400 border border-gray-600/30 px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center w-fit gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span> STOPPED</span>`;
+
+                return `
+                    <tr class="hover:bg-discord-dark/50 transition">
+                        <td class="p-3">
+                            <div class="font-mono text-white text-xs font-medium">${maskedToken}</div>
+                            <div class="text-[10px] text-gray-400 font-mono">Channel: ${t.channelId} | Delay: ${t.delay}s</div>
+                        </td>
+                        <td class="p-3">
+                            ${statusBadge}
+                        </td>
+                        <td class="p-3 text-center font-mono text-emerald-400 font-semibold" id="sentCount_${t.id}">
+                            ${t.sentCount}
+                        </td>
+                        <td class="p-3 font-mono text-gray-300 text-[11px]" id="uptime_${t.id}">
+                            ${getUptimeString(t)}
+                        </td>
+                        <td class="p-3 text-right">
+                            <div class="flex items-center justify-end space-x-1">
+                                <button onclick="toggleTask('${t.id}')" class="p-1.5 rounded bg-discord-dark hover:bg-gray-700 text-gray-300 hover:text-white transition" title="${t.status === 'Running' ? 'Tạm dừng' : 'Chạy'}">
+                                    <i class="fa-solid ${t.status === 'Running' ? 'fa-pause text-yellow-400' : 'fa-play text-emerald-400'}"></i>
+                                </button>
+                                <button onclick="deleteTask('${t.id}')" class="p-1.5 rounded bg-discord-dark hover:bg-red-900/40 text-gray-300 hover:text-red-400 transition" title="Xóa">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderTableUptimeAndCounts() {
+            tokenList.forEach(t => {
+                const countEl = document.getElementById(`sentCount_${t.id}`);
+                const uptimeEl = document.getElementById(`uptime_${t.id}`);
+                if (countEl) countEl.innerText = t.sentCount;
+                if (uptimeEl) uptimeEl.innerText = getUptimeString(t);
+            });
+        }
+
+        // Live Uptime Update Loop
+        setInterval(() => {
+            renderTableUptimeAndCounts();
+        }, 1000);
+
+        function getUptimeString(task) {
+            if (task.status !== 'Running' || !task.startTime) return '00:00:00';
+            const diff = Math.floor((Date.now() - task.startTime) / 1000);
+            const hrs = Math.floor(diff / 3600).toString().padStart(2, '0');
+            const mins = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+            const secs = (diff % 60).toString().padStart(2, '0');
+            return `${hrs}:${mins}:${secs}`;
+        }
+
+        // Update Summary Stats Header
+        function updateStats() {
+            document.getElementById('statTotalTokens').innerText = tokenList.length;
+            document.getElementById('statActiveTokens').innerText = tokenList.filter(t => t.status === 'Running').length;
+            
+            const totalSent = tokenList.reduce((acc, curr) => acc + (curr.sentCount || 0), 0);
+            document.getElementById('statTotalSent').innerText = totalSent;
+        }
+
+        // Export Configuration to JSON
+        function exportConfig() {
+            if (tokenList.length === 0) {
+                showToast('Không có cấu hình Token để xuất!', 'error');
+                return;
+            }
+
+            const exportData = tokenList.map(t => ({
+                token: t.token,
+                channelId: t.channelId,
+                message: t.message,
+                delay: t.delay,
+                options: t.options
+            }));
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `discord_auto_tokens_${Date.now()}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+
+            showToast('Đã tải xuống tập tin cấu hình JSON!', 'success');
+            addLog('INFO', 'Đã xuất file cấu hình JSON thành công.');
+        }
+
+        // Import Configuration from JSON file
+        function importConfig(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        let count = 0;
+                        imported.forEach(item => {
+                            if (item.token && item.channelId) {
+                                const id = 'TK_' + Math.random().toString(36).substr(2, 7);
+                                tokenList.push({
+                                    id: id,
+                                    token: item.token,
+                                    channelId: item.channelId,
+                                    message: item.message || '',
+                                    delay: item.delay || 10,
+                                    options: item.options || { autoSend: true, autoOnline: true, autoReact: false },
+                                    status: 'Stopped',
+                                    sentCount: 0,
+                                    startTime: null,
+                                    intervalId: null
+                                });
+                                count++;
+                            }
+                        });
+                        saveToLocalStorage();
+                        renderTable();
+                        updateStats();
+                        showToast(`Nhập thành công ${count} Token!`, 'success');
+                        addLog('SUCCESS', `Đã Import thành công ${count} cấu hình từ JSON.`);
+                    } else {
+                        showToast('Định dạng tệp JSON không hợp lệ!', 'error');
+                    }
+                } catch (err) {
+                    showToast('Đọc tệp thất bại. Vui lòng kiểm tra file JSON!', 'error');
+                }
+            };
+            if (event.target.files[0]) {
+                fileReader.readAsText(event.target.files[0]);
+            }
+        }
+    </script>
+</body>
+</html>
